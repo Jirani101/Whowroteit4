@@ -10,6 +10,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView bookData;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,8 +40,8 @@ public class MainActivity extends AppCompatActivity {
         ((Button) findViewById(R.id.searchButton)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new JSONTask().execute("https://www.googleapis.com/books/v1/volumes?q=android&maxResults=1");
-
+                String searchQuery = ((TextView) findViewById(R.id.bookInput)).getText().toString();
+                new JSONTask().execute(searchQuery + "https://jsonparsingdemo-cec5b.firebaseapp.com/jsonData/moviesDemoList.txt");
 
             }
         });
@@ -70,13 +75,31 @@ public class MainActivity extends AppCompatActivity {
                     buffer.append(line);
 
                 }
-                return buffer.toString();
+                String finalJson = buffer.toString();
+
+                JSONObject parentObject = new JSONObject(finalJson);
+                JSONArray parentArray = parentObject.getJSONArray("movies");
+                StringBuffer finalBufferedData = new StringBuffer();
+
+                for (int i = 0; i<parentArray.length(); i++) {
+
+                    JSONObject finalObject = parentArray.getJSONObject(i);
+
+                    String movieName = finalObject.getString("movie");
+                    int year = finalObject.getInt("year");
+                    finalBufferedData.append(movieName + " - " + year + "\n");
+
+
+                }
+                return finalBufferedData.toString();
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
 
+            } catch (JSONException e) {
+                e.printStackTrace();
             } finally {
                 if (connection != null) {
                     connection.disconnect();
